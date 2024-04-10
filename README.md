@@ -1,1 +1,0 @@
-![record.gif](record.gif)

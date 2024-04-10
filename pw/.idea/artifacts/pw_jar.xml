@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="pw:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/pw_jar</output-path>
+    <root id="archive" name="pw.jar">
+      <element id="module-output" name="pw" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/jsoup-1.17.2.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
