@@ -6,8 +6,8 @@ import org.jsoup.select.Elements;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +18,6 @@ public class Main {
             return;
         }
 
-        // Process the arguments
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
                 case "-h":
@@ -66,42 +65,36 @@ public class Main {
     }
 
     private static void requestUrl(String urlString) {
-        try {
-            // Create a URL object from the string.
-            URL url = new URL(urlString);
+        String host = urlString.replace("http://", "").replace("https://", "").split("/")[0];
+        int port = urlString.startsWith("https://") ? 443 : 80;
+        String path = urlString.substring(urlString.indexOf(host) + host.length());
 
-            // Open a connection to the URL.
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        if (path.isEmpty()) {
+            path = "/";
+        }
 
-            // Set the request method. In this case, we are sending a GET request.
-            connection.setRequestMethod("GET");
+        try (Socket socket = new Socket(host, port);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            // Set a user-agent or any other headers you need.
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+            // Send HTTP GET request
+            out.println("GET " + path + " HTTP/1.1");
+            out.println("Host: " + host);
+            out.println("User-Agent: Mozilla/5.0");
+            out.println("Connection: close");
+            out.println(""); // blank line to end the header section
 
-            // Get the response code to determine if the request was successful.
-            int responseCode = connection.getResponseCode();
-            System.out.println("Response Code: " + responseCode);
-
-            // If the request was successful (response code 200),
-            // read the response from the input stream.
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String inputLine;
-                StringBuilder response = new StringBuilder();
-
-                while (((inputLine = in.readLine())) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-
-                // Print the response
-                System.out.println(response.toString());
-            } else {
-                System.out.println("GET request not worked");
+            // Read the response
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = in.readLine()) != null) {
+                response.append(line).append("\n");
             }
-        } catch (
-                IOException e) {
+
+            // Print the response
+            System.out.println(response.toString());
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
